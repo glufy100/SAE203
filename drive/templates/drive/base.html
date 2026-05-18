@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Drive{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'drive/style.css' %}">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'categorie_list' %}">Catégories</a></li>
+            <li><a href="{% url 'produit_list' %}">Produits</a></li>
+            <li><a href="{% url 'client_list' %}">Clients</a></li>
+            <li><a href="{% url 'commande_list' %}">Commandes</a></li>
+            <li><a href="/admin/">Admin</a></li>
+        </ul>
+    </nav>
+    
+    <div class="container">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{% extends 'drive/base.html' %}
+
+{% block title %}Nouvelle Commande - Drive{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Nouvelle commande</h1>
+</div>
+
+<form method="POST" class="form">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="client_id">Client *</label>
+        <select id="client_id" name="client_id" required>
+            <option value="">-- Sélectionnez un client --</option>
+            {% for client in clients %}
+            <option value="{{ client.numero_client }}">
+                {{ client.prenom }} {{ client.nom }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-success">Créer</button>
+        <a href="{% url 'commande_list' %}" class="btn">Annuler</a>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'drive/base.html' %}
+
+{% block title %}Supprimer Catégorie - Drive{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Supprimer la catégorie</h1>
+</div>
+
+<div class="card">
+    <p>Êtes-vous sûr de vouloir supprimer la catégorie <strong>{{ categorie.nom }}</strong> ?</p>
+    <p class="text-danger">Cette action est irréversible.</p>
+    
+    <form method="POST" class="header-actions">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Supprimer</button>
+        <a href="{% url 'categorie_list' %}" class="btn">Annuler</a>
+    </form>
+</div>
+{% endblock %}

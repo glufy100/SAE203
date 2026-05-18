@@ -1,0 +1,55 @@
+{% extends 'drive/base.html' %}
+
+{% block title %}{% if produit %}Modifier{% else %}Créer{% endif %} Produit - Drive{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>{% if produit %}Modifier le produit{% else %}Nouveau produit{% endif %}</h1>
+</div>
+
+<form method="POST" class="form">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="nom">Nom *</label>
+        <input type="text" id="nom" name="nom" value="{% if produit %}{{ produit.nom }}{% endif %}" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="categorie_id">Catégorie *</label>
+        <select id="categorie_id" name="categorie_id" required>
+            <option value="">-- Sélectionnez une catégorie --</option>
+            {% for categorie in categories %}
+            <option value="{{ categorie.id }}" {% if produit and produit.categorie.id == categorie.id %}selected{% endif %}>
+                {{ categorie.nom }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="prix">Prix *</label>
+        <input type="number" id="prix" name="prix" step="0.01" value="{% if produit %}{{ produit.prix }}{% endif %}" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="marque">Marque</label>
+        <input type="text" id="marque" name="marque" value="{% if produit %}{{ produit.marque }}{% endif %}">
+    </div>
+    
+    <div class="form-group">
+        <label for="date_peremption">Date de péremption</label>
+        <input type="date" id="date_peremption" name="date_peremption" value="{% if produit %}{{ produit.date_peremption|date:'Y-m-d' }}{% endif %}">
+    </div>
+    
+    <div class="form-group">
+        <label for="photo">Photo (URL)</label>
+        <input type="text" id="photo" name="photo" value="{% if produit %}{{ produit.photo }}{% endif %}">
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+        <a href="{% url 'produit_list' %}" class="btn">Annuler</a>
+    </div>
+</form>
+{% endblock %}

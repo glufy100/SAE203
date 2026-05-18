@@ -1,0 +1,38 @@
+{% extends 'drive/base.html' %}
+
+{% block title %}{% if client %}Modifier{% else %}Créer{% endif %} Client - Drive{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>{% if client %}Modifier le client{% else %}Nouveau client{% endif %}</h1>
+</div>
+
+<form method="POST" class="form">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="nom">Nom *</label>
+        <input type="text" id="nom" name="nom" value="{% if client %}{{ client.nom }}{% endif %}" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="prenom">Prénom *</label>
+        <input type="text" id="prenom" name="prenom" value="{% if client %}{{ client.prenom }}{% endif %}" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="date_inscription">Date d'inscription *</label>
+        <input type="date" id="date_inscription" name="date_inscription" value="{% if client %}{{ client.date_inscription|date:'Y-m-d' }}{% else %}{{ now|date:'Y-m-d' }}{% endif %}" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="adresse">Adresse *</label>
+        <textarea id="adresse" name="adresse" required>{% if client %}{{ client.adresse }}{% endif %}</textarea>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+        <a href="{% url 'client_list' %}" class="btn">Annuler</a>
+    </div>
+</form>
+{% endblock %}

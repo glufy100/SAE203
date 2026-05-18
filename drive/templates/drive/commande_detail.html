@@ -1,0 +1,87 @@
+{% extends 'drive/base.html' %}
+
+{% block title %}Commande #{{ commande.numero_commande }} - Drive{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Commande #{{ commande.numero_commande }}</h1>
+    <p><strong>Client:</strong> 
+        <a href="{% url 'client_detail' commande.client.numero_client %}" class="link">
+            {{ commande.client.prenom }} {{ commande.client.nom }}
+        </a>
+    </p>
+    <p><strong>Date:</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}</p>
+</div>
+
+<!-- Tableau des produits -->
+{% if lignes %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Produit</th>
+            <th>Prix unitaire</th>
+            <th>Quantité</th>
+            <th>Total ligne</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ligne in lignes %}
+        <tr>
+            <td>{{ ligne.produit.nom }}</td>
+            <td>{{ ligne.produit.prix|floatformat:2 }}€</td>
+            <td>
+                <form method="POST" action="{% url 'commande_update_produit' commande.numero_commande ligne.id %}" class="inline-form">
+                    {% csrf_token %}
+                    <input type="number" name="quantite" value="{{ ligne.quantite }}" min="1" class="inline-input">
+                    <button type="submit" class="icon-btn">OK</button>
+                </form>
+            </td>
+            <td><strong>{{ ligne.get_total|floatformat:2 }}€</strong></td>
+            <td>
+                <form method="POST" action="{% url 'commande_delete_produit' commande.numero_commande ligne.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Retirer</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="total-box">
+    <strong>Montant total: {{ total|floatformat:2 }}€</strong>
+</div>
+
+{% else %}
+<div class="empty">
+    <p>Aucun produit dans cette commande.</p>
+</div>
+{% endif %}
+
+<div class="panel">
+    <h3>Ajouter un produit</h3>
+    <form method="POST" action="{% url 'commande_add_produit' commande.numero_commande %}" class="form-row">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="produit_id">Produit</label>
+            <select id="produit_id" name="produit_id" required>
+                <option value="">-- Sélectionnez un produit --</option>
+                {% for produit in produits %}
+                <option value="{{ produit.id }}">{{ produit.nom }} ({{ produit.prix|floatformat:2 }}€)</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group form-group-small">
+            <label for="quantite">Quantité</label>
+            <input type="number" id="quantite" name="quantite" value="1" min="1" required>
+        </div>
+        <button type="submit" class="btn btn-success">Ajouter</button>
+    </form>
+</div>
+
+<div class="header-actions">
+    <a href="{% url 'commande_delete' commande.numero_commande %}" class="btn btn-danger">Supprimer la commande</a>
+    <a href="{% url 'commande_list' %}" class="btn">← Retour</a>
+</div>
+{% endblock %}

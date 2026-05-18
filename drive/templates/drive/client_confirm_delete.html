@@ -1,0 +1,20 @@
+{% extends 'drive/base.html' %}
+
+{% block title %}Supprimer Client - Drive{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Supprimer le client</h1>
+</div>
+
+<div class="card">
+    <p>Êtes-vous sûr de vouloir supprimer le client <strong>{{ client.prenom }} {{ client.nom }}</strong> ?</p>
+    <p class="text-danger">Cette action est irréversible. Toutes ses commandes seront également supprimées.</p>
+    
+    <form method="POST" class="header-actions">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Supprimer</button>
+        <a href="{% url 'client_list' %}" class="btn">Annuler</a>
+    </form>
+</div>
+{% endblock %}

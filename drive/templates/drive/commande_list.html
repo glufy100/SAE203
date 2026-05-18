@@ -1,0 +1,43 @@
+{% extends 'drive/base.html' %}
+
+{% block title %}Commandes - Drive{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Commandes</h1>
+    <a href="{% url 'commande_create' %}" class="btn btn-success">Nouvelle commande</a>
+</div>
+
+{% if commandes %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Numéro</th>
+            <th>Client</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for commande in commandes %}
+        <tr>
+            <td>#{{ commande.numero_commande }}</td>
+            <td>{{ commande.client.prenom }} {{ commande.client.nom }}</td>
+            <td>{{ commande.date_commande|date:"d/m/Y H:i" }}</td>
+            <td>
+                <div class="btn-group">
+                    <a href="{% url 'commande_detail' commande.numero_commande %}" class="btn">Détails</a>
+                    <a href="{% url 'commande_delete' commande.numero_commande %}" class="btn btn-danger">Supprimer</a>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty">
+    <p>Aucune commande trouvée.</p>
+    <a href="{% url 'commande_create' %}" class="btn btn-success">Créer une commande</a>
+</div>
+{% endif %}
+{% endblock %}

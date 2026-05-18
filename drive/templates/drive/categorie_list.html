@@ -1,0 +1,43 @@
+{% extends 'drive/base.html' %}
+
+{% block title %}Catégories - Drive{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Catégories</h1>
+    <a href="{% url 'categorie_create' %}" class="btn btn-success">Nouvelle catégorie</a>
+</div>
+
+{% if categories %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Descriptif</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for categorie in categories %}
+        <tr>
+            <td>{{ categorie.id }}</td>
+            <td>{{ categorie.nom }}</td>
+            <td>{{ categorie.descriptif }}</td>
+            <td>
+                <div class="btn-group">
+                    <a href="{% url 'categorie_update' categorie.id %}" class="btn">Modifier</a>
+                    <a href="{% url 'categorie_delete' categorie.id %}" class="btn btn-danger">Supprimer</a>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty">
+    <p>Aucune catégorie trouvée.</p>
+    <a href="{% url 'categorie_create' %}" class="btn btn-success">Créer une catégorie</a>
+</div>
+{% endif %}
+{% endblock %}

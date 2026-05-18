@@ -1,0 +1,49 @@
+{% extends 'drive/base.html' %}
+
+{% block title %}Produits - Drive{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Produits</h1>
+    <a href="{% url 'produit_create' %}" class="btn btn-success">Nouveau produit</a>
+</div>
+
+{% if produits %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Marque</th>
+            <th>Prix</th>
+            <th>Catégorie</th>
+            <th>Péremption</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for produit in produits %}
+        <tr>
+            <td>{{ produit.id }}</td>
+            <td>{{ produit.nom }}</td>
+            <td>{{ produit.marque }}</td>
+            <td>{{ produit.prix }}€</td>
+            <td>{{ produit.categorie.nom }}</td>
+            <td>{{ produit.date_peremption|date:"d/m/Y" }}</td>
+            <td>
+                <div class="btn-group">
+                    <a href="{% url 'produit_update' produit.id %}" class="btn">Modifier</a>
+                    <a href="{% url 'produit_delete' produit.id %}" class="btn btn-danger">Supprimer</a>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty">
+    <p>Aucun produit trouvé.</p>
+    <a href="{% url 'produit_create' %}" class="btn btn-success">Créer un produit</a>
+</div>
+{% endif %}
+{% endblock %}
