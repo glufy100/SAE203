@@ -68,7 +68,7 @@ Bienvenue dans la documentation du projet **Drive**!
 - Fichiers créés
 
 ### CRUD Guide (existant)
-→ Lire **[CRUD_GUIDE.md](../CRUD_GUIDE.md)**
+→ Lire **[CRUD_GUIDE.md](CRUD_GUIDE.md)**
 - Guide CRUD original
 - Opérations basiques
 
