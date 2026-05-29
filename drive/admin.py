@@ -17,16 +17,14 @@ class ProduitAdmin(admin.ModelAdmin):
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('numero_client', 'nom', 'prenom', 'date_inscription', 'adresse')
+    list_display = ('numero_client', 'nom', 'prenom', 'date_inscription')
     search_fields = ('nom', 'prenom')
 
 
-# Inline pour afficher les lignes de commande directement dans la page Commande
 class LigneCommandeInline(admin.TabularInline):
     model = LigneCommande
     extra = 1
     fields = ('produit', 'quantite')
-    raw_id_fields = ('produit',)
 
 
 @admin.register(Commande)

@@ -17,7 +17,6 @@
             <li><a href="/admin/">Admin</a></li>
         </ul>
     </nav>
-    
     <div class="container">
         {% if messages %}
         <div class="messages">
@@ -28,8 +27,8 @@
             {% endfor %}
         </div>
         {% endif %}
-        
         {% block content %}{% endblock %}
     </div>
+    <script src="{% static 'drive/autocomplete.js' %}"></script>
 </body>
 </html>

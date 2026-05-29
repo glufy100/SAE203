@@ -1,0 +1,232 @@
+{% extends 'drive/base.html' %}
+{% block title %}Commande #{{ commande.numero_commande }} - Drive{% endblock %}
+{% block content %}
+
+<!-- SECTION 1: EN-TÊTE -->
+<div class="header">
+    <h1>Commande #{{ commande.numero_commande }}</h1>
+    <p>
+        <strong>Client:</strong>
+        <a href="{% url 'client_detail' commande.client.numero_client %}" class="link">
+            {{ commande.client.prenom }} {{ commande.client.nom }}
+        </a>
+    </p>
+    <p><strong>Date:</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}</p>
+</div>
+
+<!-- SECTION 2: PRODUITS DE LA COMMANDE -->
+{% if lignes %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Produit</th>
+            <th>Prix unitaire</th>
+            <th>Quantité</th>
+            <th>Total ligne</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ligne in lignes %}
+        <tr>
+            <td>{{ ligne.produit.nom }}</td>
+            <td>{{ ligne.produit.prix|floatformat:2 }}€</td>
+            <!-- COLONNE: MODIFIER QUANTITÉ -->
+            <td>
+                <form method="POST" action="{% url 'commande_update_produit' commande.numero_commande ligne.id %}" class="inline-form">
+                    {% csrf_token %}
+                    <input type="number" name="quantite" value="{{ ligne.quantite }}" min="1" class="inline-input">
+                    <button type="submit" class="icon-btn">OK</button>
+                </form>
+            </td>
+            <td><strong>{{ ligne.get_total|floatformat:2 }}€</strong></td>
+            <!-- COLONNE: SUPPRIMER -->
+            <td>
+                <form method="POST" action="{% url 'commande_delete_produit' commande.numero_commande ligne.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Retirer</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div class="total-box"><strong>Montant total: {{ total|floatformat:2 }}€</strong></div>
+{% else %}
+<div class="empty"><p>Aucun produit dans cette commande.</p></div>
+{% endif %}
+
+<!-- SECTION 3: AJOUTER UN PRODUIT -->
+<div class="panel">
+    <h3>➕ Ajouter un produit</h3>
+    <form method="POST" action="{% url 'commande_add_produit' commande.numero_commande %}" class="form-row">
+        {% csrf_token %}
+
+        <!-- INPUT: SÉLECTIONNER PRODUIT AVEC INFOS -->
+        <div class="form-group" style="flex: 2;">
+            <label for="produit_id">Produit *</label>
+            <select id="produit_id" name="produit_id" required>
+                <option value="">-- Sélectionnez un produit --</option>
+                {% for produit in produits %}
+                <option value="{{ produit.id }}" data-prix="{{ produit.prix }}" data-categorie="{{ produit.categorie.nom }}" data-marque="{{ produit.marque|default:'-' }}">
+                    {{ produit.nom }} ({{ produit.prix }}€)
+                </option>
+                {% endfor %}
+            </select>
+            <!-- AFFICHAGE DES INFOS -->
+            <div id="product-info" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px; display: none;">
+                <small>
+                    <strong>Catégorie:</strong> <span id="info-categorie"></span><br>
+                    <strong>Marque:</strong> <span id="info-marque"></span><br>
+                    <strong>Prix:</strong> <span id="info-prix"></span>€
+                </small>
+            </div>
+        </div>
+
+        <!-- INPUT: QUANTITÉ -->
+        <div class="form-group form-group-small">
+            <label for="quantite">Quantité</label>
+            <input type="number" id="quantite" name="quantite" value="1" min="1" required>
+        </div>
+
+        <!-- BOUTON: AJOUTER -->
+        <button type="submit" class="btn btn-success">Ajouter</button>
+    </form>
+
+    <!-- SCRIPT: AFFICHER LES INFOS DU PRODUIT -->
+    <script>
+    document.getElementById('produit_id').addEventListener('change', function() {
+        const option = this.options[this.selectedIndex];
+        const info = document.getElementById('product-info');
+        if (option.value === '') {
+            info.style.display = 'none';
+        } else {
+            document.getElementById('info-categorie').textContent = option.getAttribute('data-categorie');
+            document.getElementById('info-marque').textContent = option.getAttribute('data-marque');
+            document.getElementById('info-prix').textContent = option.getAttribute('data-prix');
+            info.style.display = 'block';
+        }
+    });
+    </script>
+</div>
+
+<!-- SECTION 4: ACTIONS -->
+<div class="header-actions">
+    <a href="{% url 'commande_delete' commande.numero_commande %}" class="btn btn-danger">Supprimer la commande</a>
+    <a href="{% url 'commande_list' %}" class="btn">← Retour</a>
+</div>
+
+<!-- SCRIPT: AUTOCOMPLETE -->
+<script>
+const API_URL = "{% url 'api_produits_search' %}";
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('produit_search');
+    const selectInput = document.getElementById('produit_id');
+    const quantiteInput = document.getElementById('quantite');
+    const formGroup = searchInput.parentElement;
+
+    if (!searchInput || !selectInput) {
+        console.error('Éléments HTML manquants');
+        return;
+    }
+
+    let timeoutId;
+    let suggestionsBox = null;
+
+    // Créer la boîte de suggestions
+    function createSuggestionsBox() {
+        const box = document.createElement('div');
+        box.className = 'autocomplete-suggestions';
+        box.style.position = 'absolute';
+        box.style.top = '100%';
+        box.style.left = '0';
+        box.style.right = '0';
+        box.style.zIndex = '1000';
+        box.style.display = 'none';
+        box.style.marginTop = '0';
+        formGroup.appendChild(box);
+        return box;
+    }
+
+    // Écouter le focus
+    searchInput.addEventListener('focus', function() {
+        if (!suggestionsBox) {
+            suggestionsBox = createSuggestionsBox();
+        }
+    });
+
+    // Écouter l'input (tape au clavier)
+    searchInput.addEventListener('input', function() {
+        clearTimeout(timeoutId);
+        const query = this.value.trim();
+
+        if (query.length < 1) {
+            if (suggestionsBox) suggestionsBox.style.display = 'none';
+            return;
+        }
+
+        console.log('Recherche:', query, 'API:', API_URL);
+        timeoutId = setTimeout(() => {
+            fetch(API_URL + '?q=' + encodeURIComponent(query))
+                .then(response => {
+                    if (!response.ok) throw new Error('Erreur API');
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Résultats:', data);
+                    if (suggestionsBox) {
+                        suggestionsBox.innerHTML = '';
+
+                        if (data.produits.length === 0) {
+                            suggestionsBox.innerHTML = '<div class="autocomplete-item-empty">❌ Aucun produit trouvé</div>';
+                        } else {
+                            data.produits.forEach(produit => {
+                                const item = document.createElement('div');
+                                item.className = 'autocomplete-item';
+                                item.innerHTML = `
+                                    <strong>${produit.nom}</strong>
+                                    <br><small>${produit.categorie} • ${produit.prix}€ • ${produit.marque}</small>
+                                `;
+                                item.style.cursor = 'pointer';
+                                item.onclick = () => {
+                                    // Ajouter l'option si elle n'existe pas
+                                    let option = selectInput.querySelector(`option[value="${produit.id}"]`);
+                                    if (!option) {
+                                        option = document.createElement('option');
+                                        option.value = produit.id;
+                                        option.textContent = `${produit.nom} (${produit.prix}€)`;
+                                        selectInput.appendChild(option);
+                                    }
+                                    selectInput.value = produit.id;
+                                    searchInput.value = produit.nom;
+                                    suggestionsBox.style.display = 'none';
+                                    quantiteInput.focus();
+                                    console.log('Produit sélectionné:', produit.nom);
+                                };
+                                suggestionsBox.appendChild(item);
+                            });
+                        }
+                        suggestionsBox.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur API:', error);
+                    if (suggestionsBox) {
+                        suggestionsBox.innerHTML = '<div class="autocomplete-item-empty">⚠️ Erreur API</div>';
+                        suggestionsBox.style.display = 'block';
+                    }
+                });
+        }, 300);
+    });
+
+    // Fermer les suggestions au clic ailleurs
+    document.addEventListener('click', function(e) {
+        if (e.target !== searchInput && suggestionsBox) {
+            suggestionsBox.style.display = 'none';
+        }
+    });
+});
+</script>
+
+{% endblock %}

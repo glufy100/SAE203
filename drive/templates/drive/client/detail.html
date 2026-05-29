@@ -1,28 +1,18 @@
 {% extends 'drive/base.html' %}
-
 {% block title %}{{ client.prenom }} {{ client.nom }} - Détails Client - Drive{% endblock %}
-
 {% block content %}
 <div class="header">
     <h1>{{ client.prenom }} {{ client.nom }}</h1>
-    <p>
-        <strong>Numéro:</strong> #{{ client.numero_client }} | 
-        <strong>Inscription:</strong> {{ client.date_inscription|date:"d/m/Y" }}
-    </p>
+    <p><strong>Numéro:</strong> #{{ client.numero_client }} | <strong>Inscription:</strong> {{ client.date_inscription|date:"d/m/Y" }}</p>
     <p><strong>Adresse:</strong> {{ client.adresse }}</p>
 </div>
-
-<!-- Boutons d'action -->
 <div class="header-actions">
     <a href="{% url 'client_update' client.numero_client %}" class="btn">Modifier</a>
     <a href="{% url 'client_delete' client.numero_client %}" class="btn btn-danger">Supprimer</a>
     <a href="{% url 'client_list' %}" class="btn">← Retour</a>
 </div>
-
-<!-- Commandes du client -->
 <div>
     <h2>Historique des commandes ({{ commandes_avec_totaux|length }})</h2>
-    
     {% if commandes_avec_totaux %}
     <div class="stack">
         {% for item in commandes_avec_totaux %}
@@ -30,14 +20,10 @@
             <div class="card-header">
                 <div>
                     <h3 class="card-title">Commande #{{ item.commande.numero_commande }}</h3>
-                    <p class="text-muted">
-                        {{ item.commande.date_commande|date:"d/m/Y à H:i" }}
-                    </p>
+                    <p class="text-muted">{{ item.commande.date_commande|date:"d/m/Y à H:i" }}</p>
                 </div>
                 <a href="{% url 'commande_detail' item.commande.numero_commande %}" class="btn">Voir détails</a>
             </div>
-            
-            <!-- Produits de cette commande -->
             <table class="table table-compact">
                 <thead>
                     <tr>
@@ -53,18 +39,12 @@
                         <td>{{ ligne.produit.nom }}</td>
                         <td class="center">{{ ligne.quantite }}</td>
                         <td class="right">{{ ligne.produit.prix|floatformat:2 }}€</td>
-                        <td class="right">
-                            {{ ligne.produit.prix|add:0 }}€ × {{ ligne.quantite }}
-                        </td>
+                        <td class="right">{{ ligne.produit.prix|add:0 }}€ × {{ ligne.quantite }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            
-            <!-- Montant total de la commande -->
-            <div class="right">
-                <strong>Montant total: {{ item.total|floatformat:2 }}€</strong>
-            </div>
+            <div class="right"><strong>Montant total: {{ item.total|floatformat:2 }}€</strong></div>
         </div>
         {% endfor %}
     </div>

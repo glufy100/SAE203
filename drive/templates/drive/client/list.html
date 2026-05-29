@@ -1,13 +1,14 @@
 {% extends 'drive/base.html' %}
-
 {% block title %}Clients - Drive{% endblock %}
-
 {% block content %}
+
+<!-- EN-TÊTE -->
 <div class="header">
-    <h1>Clients</h1>
-    <a href="{% url 'client_create' %}" class="btn btn-success">Nouveau client</a>
+    <h1>👥 Clients</h1>
+    <a href="{% url 'client_create' %}" class="btn btn-success">➕ Nouveau client</a>
 </div>
 
+<!-- TABLEAU CLIENTS -->
 {% if clients %}
 <table class="table">
     <thead>
@@ -30,15 +31,17 @@
             <td>{{ client.adresse }}</td>
             <td>
                 <div class="btn-group">
-                    <a href="{% url 'client_detail' client.numero_client %}" class="btn">Détails</a>
-                    <a href="{% url 'client_update' client.numero_client %}" class="btn">Modifier</a>
-                    <a href="{% url 'client_delete' client.numero_client %}" class="btn btn-danger">Supprimer</a>
+                    <a href="{% url 'client_detail' client.numero_client %}" class="btn">👁️ Détails</a>
+                    <a href="{% url 'client_update' client.numero_client %}" class="btn">✏️ Modifier</a>
+                    <a href="{% url 'client_delete' client.numero_client %}" class="btn btn-danger">🗑️ Supprimer</a>
                 </div>
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
+<!-- ÉTAT VIDE -->
 {% else %}
 <div class="empty">
     <p>Aucun client trouvé.</p>

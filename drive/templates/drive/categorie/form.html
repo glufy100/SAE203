@@ -1,25 +1,19 @@
 {% extends 'drive/base.html' %}
-
 {% block title %}{% if categorie %}Modifier{% else %}Créer{% endif %} Catégorie - Drive{% endblock %}
-
 {% block content %}
 <div class="header">
     <h1>{% if categorie %}Modifier la catégorie{% else %}Nouvelle catégorie{% endif %}</h1>
 </div>
-
 <form method="POST" class="form">
     {% csrf_token %}
-    
     <div class="form-group">
         <label for="nom">Nom *</label>
         <input type="text" id="nom" name="nom" value="{% if categorie %}{{ categorie.nom }}{% endif %}" required>
     </div>
-    
     <div class="form-group">
         <label for="descriptif">Descriptif</label>
         <textarea id="descriptif" name="descriptif">{% if categorie %}{{ categorie.descriptif }}{% endif %}</textarea>
     </div>
-    
     <div class="form-actions">
         <button type="submit" class="btn btn-success">Enregistrer</button>
         <a href="{% url 'categorie_list' %}" class="btn">Annuler</a>
