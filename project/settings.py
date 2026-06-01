@@ -81,16 +81,17 @@ if os.getenv('MYSQL_DATABASE'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv('MYSQL_DATABASE'),
-            'USER': os.getenv('MYSQL_USER', 'root'),
-            'PASSWORD': os.getenv('MYSQL_PASSWORD', ''),
-            'HOST': os.getenv('MYSQL_HOST', '127.0.0.1'),
+            'NAME': os.getenv('sae203'),
+            'USER': os.getenv('MYSQL_USER', 'django'),
+            'PASSWORD': os.getenv('motdepasse', ''),
+            'HOST': os.getenv('MYSQL_HOST', '10.128.207.86'),
             'PORT': os.getenv('MYSQL_PORT', '3306'),
             'OPTIONS': {
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             },
         }
     }
+"""    
 else:
     DATABASES = {
         'default': {
@@ -98,7 +99,7 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-
+"""
 
 
 # Password validation
