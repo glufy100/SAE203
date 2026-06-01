@@ -1,20 +1,19 @@
 #!/bin/bash
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Script de configuration Apache pour SAE203
-# Configure le VirtualHost et les modules nécessaires
+# Script de démarrage Django pour SAE203
+# Lance Django en arrière-plan et teste la connexion
 # ═══════════════════════════════════════════════════════════════════════════
 
 set +e
 
 echo "╔════════════════════════════════════════════════════════════════════════╗"
-echo "║        ⚙️  CONFIGURATION APACHE POUR SAE203                           ║"
+echo "║        🚀 DÉMARRAGE DJANGO SAE203                                    ║"
 echo "╚════════════════════════════════════════════════════════════════════════╝"
 echo ""
 
 # Configuration
 PROJECT_PATH="/var/www/SAE203"
-APACHE_CONFIG="/etc/apache2/sites-available/sae203.conf"
 
 # Couleurs
 RED='\033[0;31m'
@@ -23,163 +22,82 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Vérifier que le script s'exécute en tant que root
-if [ "$EUID" -ne 0 ]; then 
-    echo -e "${RED}❌ Ce script doit être exécuté avec sudo${NC}"
-    exit 1
-fi
-
 # ═══════════════════════════════════════════════════════════════════════════
 # Étape 1: Vérifier que le projet existe
 # ═══════════════════════════════════════════════════════════════════════════
 
-echo -e "${BLUE}📂 Étape 1: Vérification du répertoire du projet...${NC}"
+echo -e "${BLUE}📂 Étape 1: Vérification du projet...${NC}"
 if [ ! -d "$PROJECT_PATH" ]; then
     echo -e "${RED}❌ Le répertoire $PROJECT_PATH n'existe pas${NC}"
     echo -e "${YELLOW}   Exécutez d'abord: sudo ./init-vm.sh${NC}"
     exit 1
 fi
-echo -e "${GREEN}✅ Répertoire trouvé: $PROJECT_PATH${NC}"
+cd "$PROJECT_PATH" || exit 1
+echo -e "${GREEN}✅ Projet trouvé: $PROJECT_PATH${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Étape 2: Activer les modules Apache nécessaires
+# Étape 2: Vérifier les migrations
 # ═══════════════════════════════════════════════════════════════════════════
 
-echo -e "${BLUE}⚙️  Étape 2: Activation des modules Apache...${NC}"
-
-# Modules essentiels pour Django
-MODULES=("proxy" "proxy_http" "rewrite" "headers" "wsgi")
-
-for module in "${MODULES[@]}"; do
-    if a2enmod "$module" 2>/dev/null | grep -q "enabled\|already"; then
-        echo -e "   ${GREEN}✅ Module $module activé${NC}"
-    else
-        echo -e "   ${YELLOW}⚠️  Module $module (peut ne pas être disponible)${NC}"
-    fi
-done
-echo ""
-
-# ═══════════════════════════════════════════════════════════════════════════
-# Étape 3: Créer la configuration VirtualHost
-# ═══════════════════════════════════════════════════════════════════════════
-
-echo -e "${BLUE}📝 Étape 3: Création de la configuration VirtualHost...${NC}"
-
-cat > "$APACHE_CONFIG" << 'EOF'
-<VirtualHost *:80>
-    ServerName sae203.local
-    ServerAlias localhost
-    DocumentRoot /var/www/SAE203
-
-    # Logs
-    ErrorLog ${APACHE_LOG_DIR}/sae203_error.log
-    CustomLog ${APACHE_LOG_DIR}/sae203_access.log combined
-
-    # Activer le proxy
-    <IfModule mod_proxy.c>
-        ProxyPreserveHost On
-        
-        # Pas de proxy pour les fichiers statiques
-        ProxyPass /static/ !
-        ProxyPass /media/ !
-        
-        # Rediriger tout vers Django
-        ProxyPass / http://127.0.0.1:8000/
-        ProxyPassReverse / http://127.0.0.1:8000/
-    </IfModule>
-
-    # Static files
-    <Directory /var/www/SAE203/drive/static>
-        Require all granted
-        Options -Indexes
-    </Directory>
-
-    # Media files
-    <Directory /var/www/SAE203/drive/media>
-        Require all granted
-        Options -Indexes
-    </Directory>
-
-    # Root directory
-    <Directory /var/www/SAE203>
-        Require all granted
-    </Directory>
-
-    # Deny access to sensitive files
-    <FilesMatch "^\.">
-        Require all denied
-    </FilesMatch>
-
-    <FilesMatch "\.py$">
-        Require all denied
-    </FilesMatch>
-
-</VirtualHost>
-EOF
-
-if [ -f "$APACHE_CONFIG" ]; then
-    echo -e "${GREEN}✅ Configuration VirtualHost créée${NC}"
-    echo -e "   Chemin: $APACHE_CONFIG"
+echo -e "${BLUE}🔄 Étape 2: Lancer les migrations Django...${NC}"
+if ! python3 manage.py migrate 2>&1 | grep -q "error\|Error"; then
+    echo -e "${GREEN}✅ Migrations appliquées${NC}"
 else
-    echo -e "${RED}❌ Erreur lors de la création de la configuration${NC}"
+    echo -e "${YELLOW}⚠️  Vérifiez la configuration de la base de données${NC}"
+fi
+echo ""
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Étape 3: Remplir la base de données
+# ═══════════════════════════════════════════════════════════════════════════
+
+echo -e "${BLUE}📊 Étape 3: Remplissage de la base de données...${NC}"
+echo "   → Vous pouvez exécuter ceci manuellement plus tard avec:"
+echo "      python3 populate_db.py"
+echo ""
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Étape 4: Arrêter les anciennes instances Django
+# ═══════════════════════════════════════════════════════════════════════════
+
+echo -e "${BLUE}⏹️  Étape 4: Arrêt des anciennes instances Django...${NC}"
+pkill -f "python3 manage.py runserver" 2>/dev/null || true
+sleep 2
+echo -e "${GREEN}✅ Anciennes instances arrêtées${NC}"
+echo ""
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Étape 5: Lancer Django en arrière-plan
+# ═══════════════════════════════════════════════════════════════════════════
+
+echo -e "${BLUE}🚀 Étape 5: Démarrage de Django...${NC}"
+nohup python3 manage.py runserver 127.0.0.1:8000 > /tmp/django.log 2>&1 &
+DJANGO_PID=$!
+echo "   → PID: $DJANGO_PID"
+sleep 3
+
+# Vérifier que Django a démarré
+if ps -p $DJANGO_PID > /dev/null 2>&1; then
+    echo -e "${GREEN}✅ Django démarré avec succès${NC}"
+else
+    echo -e "${RED}❌ Erreur lors du démarrage de Django${NC}"
+    echo "   Vérifiez les logs: cat /tmp/django.log"
+    tail -20 /tmp/django.log
     exit 1
 fi
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Étape 4: Désactiver le site par défaut et activer SAE203
+# Étape 6: Tester la connexion
 # ═══════════════════════════════════════════════════════════════════════════
 
-echo -e "${BLUE}🔧 Étape 4: Activation du site SAE203...${NC}"
-
-# Désactiver le site par défaut
-if a2dissite 000-default 2>/dev/null; then
-    echo -e "   ${GREEN}✅ Site par défaut désactivé${NC}"
-fi
-
-# Activer le site SAE203
-if a2ensite sae203 2>/dev/null | grep -q "enabled\|already"; then
-    echo -e "   ${GREEN}✅ Site SAE203 activé${NC}"
+echo -e "${BLUE}🧪 Étape 6: Test de la connexion...${NC}"
+sleep 2
+if curl -s http://127.0.0.1:8000/ > /dev/null 2>&1; then
+    echo -e "${GREEN}✅ Django répond correctement${NC}"
 else
-    echo -e "   ${RED}❌ Erreur lors de l'activation du site${NC}"
-    exit 1
-fi
-echo ""
-
-# ═══════════════════════════════════════════════════════════════════════════
-# Étape 5: Tester la configuration
-# ═══════════════════════════════════════════════════════════════════════════
-
-echo -e "${BLUE}🧪 Étape 5: Test de la configuration Apache...${NC}"
-if apache2ctl configtest 2>/dev/null | grep -q "Syntax OK"; then
-    echo -e "${GREEN}✅ Configuration Apache valide${NC}"
-else
-    echo -e "${RED}❌ Erreur de syntaxe dans la configuration${NC}"
-    apache2ctl configtest
-    exit 1
-fi
-echo ""
-
-# ═══════════════════════════════════════════════════════════════════════════
-# Étape 6: Redémarrer Apache
-# ═══════════════════════════════════════════════════════════════════════════
-
-echo -e "${BLUE}🔄 Étape 6: Redémarrage d'Apache...${NC}"
-if systemctl restart apache2; then
-    echo -e "${GREEN}✅ Apache redémarré avec succès${NC}"
-    sleep 2
-    
-    if systemctl is-active --quiet apache2; then
-        echo -e "${GREEN}✅ Apache fonctionne correctement${NC}"
-    else
-        echo -e "${RED}❌ Apache ne fonctionne pas${NC}"
-        systemctl status apache2
-        exit 1
-    fi
-else
-    echo -e "${RED}❌ Erreur lors du redémarrage d'Apache${NC}"
-    exit 1
+    echo -e "${YELLOW}⚠️  Django n'a pas répondu (peut prendre quelques secondes)${NC}"
 fi
 echo ""
 
@@ -188,27 +106,26 @@ echo ""
 # ═══════════════════════════════════════════════════════════════════════════
 
 echo "╔════════════════════════════════════════════════════════════════════════╗"
-echo "║             ✅ CONFIGURATION APACHE RÉUSSIE !                         ║"
+echo "║               ✅ DÉMARRAGE DJANGO RÉUSSI !                           ║"
 echo "╠════════════════════════════════════════════════════════════════════════╣"
 echo "║                                                                        ║"
-echo "║  🌐 Apache: ✅ En cours d'exécution                                    ║"
+echo "║  🐍 Django: ✅ En cours d'exécution sur 127.0.0.1:8000               ║"
 echo "║  📁 Projet: $PROJECT_PATH"
-echo "║  ⚙️  Configuration: $APACHE_CONFIG"
 echo "║  📅 Heure: $(date '+%d/%m/%Y à %H:%M:%S')"
 echo "║                                                                        ║"
-echo "║  🎯 Prochaines étapes:                                               ║"
+echo "║  🎯 Accès à l'application:                                           ║"
 echo "║                                                                        ║"
-echo "║  1. Démarrer Django en arrière-plan:                                 ║"
-echo "║     cd $PROJECT_PATH                                                 ║"
-echo "║     python manage.py runserver 127.0.0.1:8000 &                      ║"
+echo "║  → http://localhost                                                  ║"
+echo "║  → http://sae203.local                                               ║"
 echo "║                                                                        ║"
-echo "║  2. Accéder à l'application:                                         ║"
-echo "║     http://localhost                                                 ║"
-echo "║     ou                                                               ║"
-echo "║     http://sae203.local                                              ║"
+echo "║  📝 Logs Django:                                                      ║"
+echo "║  → tail -f /tmp/django.log                                           ║"
 echo "║                                                                        ║"
-echo "║  3. (Optional) Configurer un process manager (Gunicorn/Systemd):    ║"
-echo "║     Pour un vrai environnement de production                         ║"
+echo "║  🛑 Arrêter Django:                                                   ║"
+echo "║  → pkill -f 'python3 manage.py runserver'                            ║"
+echo "║                                                                        ║"
+echo "║  🔄 Redémarrer Django:                                               ║"
+echo "║  → sudo ./start-django.sh                                            ║"
 echo "║                                                                        ║"
 echo "╚════════════════════════════════════════════════════════════════════════╝"
 echo ""
