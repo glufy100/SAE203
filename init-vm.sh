@@ -36,19 +36,26 @@ fi
 
 echo -e "${BLUE}📦 Étape 0: Installation des paquets système...${NC}"
 echo "   → Mise à jour de la liste des paquets..."
-apt-get update -qq 2>/dev/null
-echo "   → Installation de git, python3, pip, wget..."
+apt-get update -qq 2>/dev/null || apt-get update
+
+echo "   → Installation de git, python3, pip, wget, curl, apache2..."
 apt-get install -y -qq \
     git \
     python3 \
     python3-pip \
     python3-venv \
     wget \
+    curl \
     apache2 \
     apache2-utils \
     libapache2-mod-proxy-http \
-    curl \
     2>/dev/null
+
+# Vérifier que git est bien installé
+if ! command -v git &> /dev/null; then
+    echo -e "${RED}❌ git n'a pas pu être installé${NC}"
+    exit 1
+fi
 
 echo -e "${GREEN}✅ Paquets système installés${NC}"
 echo ""
