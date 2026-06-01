@@ -83,20 +83,28 @@ echo -e "${GREEN}✅ Repository cloné avec succès${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Étape 3: Configurer Git (safe.directory)
+# Étape 3: Accéder au répertoire du projet
 # ═══════════════════════════════════════════════════════════════════════════
 
-echo -e "${BLUE}📦 Étape 3: Configuration de Git...${NC}"
+echo -e "${BLUE}📂 Étape 3: Accès au répertoire du projet...${NC}"
+cd "$PROJECT_PATH" || exit 1
+echo -e "${GREEN}✅ Répertoire accessible${NC}"
+echo ""
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Étape 4: Configurer Git (safe.directory)
+# ═══════════════════════════════════════════════════════════════════════════
+
+echo -e "${BLUE}📦 Étape 4: Configuration de Git...${NC}"
 git config --global --add safe.directory "$PROJECT_PATH" 2>/dev/null || true
 echo -e "${GREEN}✅ Git configuré${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Étape 4: Vérifier les fichiers
+# Étape 5: Vérifier les fichiers
 # ═══════════════════════════════════════════════════════════════════════════
 
-echo -e "${BLUE}🔍 Étape 4: Vérification des fichiers...${NC}"
-cd "$PROJECT_PATH" || exit 1
+echo -e "${BLUE}🔍 Étape 5: Vérification des fichiers...${NC}"
 files=("manage.py" "populate_db.py" "requirements.txt" "project/settings.py" "deploy.sh" "setup-apache.sh")
 all_ok=true
 for file in "${files[@]}"; do
@@ -115,10 +123,10 @@ if [ "$all_ok" = false ]; then
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Étape 5: Installer les dépendances Python
+# Étape 6: Installer les dépendances Python
 # ═══════════════════════════════════════════════════════════════════════════
 
-echo -e "${BLUE}🐍 Étape 5: Installation des dépendances Python...${NC}"
+echo -e "${BLUE}🐍 Étape 6: Installation des dépendances Python...${NC}"
 echo "   → Vérification de requirements.txt..."
 if [ -f "requirements.txt" ]; then
     echo "   → Mise à jour de pip..."
@@ -138,10 +146,10 @@ fi
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Étape 6: Rendre les scripts exécutables
+# Étape 7: Rendre les scripts exécutables
 # ═══════════════════════════════════════════════════════════════════════════
 
-echo -e "${BLUE}⚙️  Étape 6: Configuration des permissions des scripts...${NC}"
+echo -e "${BLUE}⚙️  Étape 7: Configuration des permissions des scripts...${NC}"
 chmod +x deploy.sh 2>/dev/null || true
 chmod +x setup-apache.sh 2>/dev/null || true
 chmod +x start-django.sh 2>/dev/null || true
@@ -150,20 +158,20 @@ echo -e "${GREEN}✅ Permissions des scripts configurées${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Étape 7: Définir les permissions Apache
+# Étape 8: Définir les permissions Apache
 # ═══════════════════════════════════════════════════════════════════════════
 
-echo -e "${BLUE}🔐 Étape 7: Configuration des permissions pour Apache...${NC}"
+echo -e "${BLUE}🔐 Étape 8: Configuration des permissions pour Apache...${NC}"
 chown -R www-data:www-data "$PROJECT_PATH" 2>/dev/null || true
 chmod -R 755 "$PROJECT_PATH" 2>/dev/null || true
 echo -e "${GREEN}✅ Permissions Apache configurées${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Étape 8: Vérifier Apache
+# Étape 9: Vérifier Apache
 # ═══════════════════════════════════════════════════════════════════════════
 
-echo -e "${BLUE}🌐 Étape 8: Vérification d'Apache...${NC}"
+echo -e "${BLUE}🌐 Étape 9: Vérification d'Apache...${NC}"
 if systemctl is-active --quiet apache2; then
     echo -e "${GREEN}✅ Apache est en cours d'exécution${NC}"
 else
