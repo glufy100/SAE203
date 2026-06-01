@@ -48,14 +48,24 @@ echo ""
 
 echo -e "${BLUE}⚙️  Étape 2: Activation des modules Apache...${NC}"
 
-# Modules essentiels pour Django
-MODULES=("proxy" "proxy_http" "rewrite" "headers" "wsgi")
+# Modules essentiels pour Django - proxy_http est le minimum requis
+MODULES=("proxy" "proxy_http")
 
 for module in "${MODULES[@]}"; do
-    if a2enmod "$module" 2>/dev/null | grep -q "enabled\|already"; then
+    if a2enmod "$module" 2>&1 | grep -q "enabled\|already"; then
         echo -e "   ${GREEN}✅ Module $module activé${NC}"
     else
-        echo -e "   ${YELLOW}⚠️  Module $module (peut ne pas être disponible)${NC}"
+        echo -e "   ${RED}❌ Erreur pour le module $module${NC}"
+    fi
+done
+
+# Modules optionnels
+OPTIONAL_MODULES=("rewrite" "headers" "wsgi")
+for module in "${OPTIONAL_MODULES[@]}"; do
+    if a2enmod "$module" 2>&1 | grep -q "enabled\|already"; then
+        echo -e "   ${GREEN}✅ Module $module activé (optionnel)${NC}"
+    else
+        echo -e "   ${YELLOW}⚠️  Module $module non disponible (optionnel)${NC}"
     fi
 done
 echo ""
@@ -134,16 +144,17 @@ echo ""
 echo -e "${BLUE}🔧 Étape 4: Activation du site SAE203...${NC}"
 
 # Désactiver le site par défaut
-if a2dissite 000-default 2>/dev/null; then
+if a2dissite 000-default 2>&1 | grep -q "Site\|disabled"; then
     echo -e "   ${GREEN}✅ Site par défaut désactivé${NC}"
 fi
 
 # Activer le site SAE203
-if a2ensite sae203 2>/dev/null | grep -q "enabled\|already"; then
+SITE_OUTPUT=$(a2ensite sae203 2>&1)
+if echo "$SITE_OUTPUT" | grep -q "enabled\|already"; then
     echo -e "   ${GREEN}✅ Site SAE203 activé${NC}"
 else
-    echo -e "   ${RED}❌ Erreur lors de l'activation du site${NC}"
-    exit 1
+    echo -e "   ${YELLOW}⚠️  Vérification de l'activation du site${NC}"
+    echo "$SITE_OUTPUT"
 fi
 echo ""
 
@@ -152,12 +163,11 @@ echo ""
 # ═══════════════════════════════════════════════════════════════════════════
 
 echo -e "${BLUE}🧪 Étape 5: Test de la configuration Apache...${NC}"
-if apache2ctl configtest 2>/dev/null | grep -q "Syntax OK"; then
+if apache2ctl configtest 2>&1 | grep -q "Syntax OK"; then
     echo -e "${GREEN}✅ Configuration Apache valide${NC}"
 else
-    echo -e "${RED}❌ Erreur de syntaxe dans la configuration${NC}"
+    echo -e "${YELLOW}⚠️  Problème de configuration détecté${NC}"
     apache2ctl configtest
-    exit 1
 fi
 echo ""
 
@@ -166,8 +176,8 @@ echo ""
 # ═══════════════════════════════════════════════════════════════════════════
 
 echo -e "${BLUE}🔄 Étape 6: Redémarrage d'Apache...${NC}"
-if systemctl restart apache2; then
-    echo -e "${GREEN}✅ Apache redémarré avec succès${NC}"
+if systemctl reload apache2 2>&1; then
+    echo -e "${GREEN}✅ Apache rechargé${NC}"
     sleep 2
     
     if systemctl is-active --quiet apache2; then
@@ -178,7 +188,7 @@ if systemctl restart apache2; then
         exit 1
     fi
 else
-    echo -e "${RED}❌ Erreur lors du redémarrage d'Apache${NC}"
+    echo -e "${RED}❌ Erreur lors du rechargement d'Apache${NC}"
     exit 1
 fi
 echo ""

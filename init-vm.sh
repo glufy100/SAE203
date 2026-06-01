@@ -97,7 +97,7 @@ echo ""
 
 echo -e "${BLUE}🔍 Étape 4: Vérification des fichiers...${NC}"
 cd "$PROJECT_PATH" || exit 1
-files=("manage.py" "populate_db.py" "requirements.txt" "project/settings.py" "deploy.sh" "setup-apache.sh")
+files=("manage.py" "populate_db.py" "requirements.txt" "project/settings.py" "deploy.sh" "setup-apache.sh" "start-django.sh")
 all_ok=true
 for file in "${files[@]}"; do
     if [ -f "$file" ]; then
@@ -121,10 +121,17 @@ fi
 echo -e "${BLUE}🐍 Étape 5: Installation des dépendances Python...${NC}"
 echo "   → Vérification de requirements.txt..."
 if [ -f "requirements.txt" ]; then
-    echo "   → Installation via pip..."
-    pip3 install --quiet --upgrade pip
-    pip3 install --quiet -r requirements.txt 2>/dev/null
-    echo -e "${GREEN}✅ Dépendances Python installées${NC}"
+    echo "   → Mise à jour de pip..."
+    pip3 install --upgrade pip setuptools wheel 2>&1 | grep -i "success\|successfully" > /dev/null && echo "      ✅ pip mis à jour" || echo "      ⚠️  pip update"
+    
+    echo "   → Installation des dépendances..."
+    if pip3 install -r requirements.txt 2>&1 | tee /tmp/pip_install.log | grep -i "error"; then
+        echo -e "${RED}❌ Erreur lors de l'installation des dépendances${NC}"
+        echo "   Détails: tail /tmp/pip_install.log"
+        tail -10 /tmp/pip_install.log
+    else
+        echo -e "${GREEN}✅ Dépendances Python installées${NC}"
+    fi
 else
     echo -e "${YELLOW}⚠️  requirements.txt non trouvé${NC}"
 fi
