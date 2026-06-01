@@ -75,10 +75,26 @@ echo ""
 echo -e "${BLUE}🔄 Étape 2: Clonage du repository...${NC}"
 echo "   → $REPO_URL"
 cd "$BASE_PATH" || exit 1
-if git clone "$REPO_URL" 2>&1 | grep -q "fatal"; then
+
+# Essayer de cloner avec plus d'info
+CLONE_OUTPUT=$(git clone "$REPO_URL" 2>&1)
+CLONE_STATUS=$?
+
+if [ $CLONE_STATUS -ne 0 ]; then
     echo -e "${RED}❌ Erreur lors du clonage du repository${NC}"
+    echo "   Détail de l'erreur:"
+    echo "$CLONE_OUTPUT"
     exit 1
 fi
+
+# Vérifier que le répertoire existe
+if [ ! -d "$PROJECT_PATH" ]; then
+    echo -e "${RED}❌ Le répertoire $PROJECT_PATH n'a pas été créé${NC}"
+    echo "   Contenu de $BASE_PATH:"
+    ls -la "$BASE_PATH"
+    exit 1
+fi
+
 echo -e "${GREEN}✅ Repository cloné avec succès${NC}"
 echo ""
 
@@ -87,8 +103,23 @@ echo ""
 # ═══════════════════════════════════════════════════════════════════════════
 
 echo -e "${BLUE}📂 Étape 3: Accès au répertoire du projet...${NC}"
-cd "$PROJECT_PATH" || exit 1
-echo -e "${GREEN}✅ Répertoire accessible${NC}"
+
+# Attendre que le système synchronise le système de fichiers
+sleep 1
+
+if [ ! -d "$PROJECT_PATH" ]; then
+    echo -e "${RED}❌ Le répertoire $PROJECT_PATH n'existe pas${NC}"
+    echo "   Vérification du contenu de $BASE_PATH:"
+    ls -la "$BASE_PATH"
+    exit 1
+fi
+
+cd "$PROJECT_PATH" || {
+    echo -e "${RED}❌ Impossible d'accéder à $PROJECT_PATH${NC}"
+    exit 1
+}
+
+echo -e "${GREEN}✅ Répertoire accessible$(pwd)${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
