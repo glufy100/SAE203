@@ -187,15 +187,12 @@ python manage.py makemigrations
 ### Erreur de connexion MySQL ?
 ```bash
 # Vérifier les paramètres dans project/settings.py
-# DATABASE = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'drive',
-#         'USER': 'root',
-#         'PASSWORD': '',
-#         'HOST': 'localhost',
-#     }
-# }
+# Variables attendues :
+# MYSQL_DATABASE=drive
+# MYSQL_USER=root
+# MYSQL_PASSWORD=
+# MYSQL_HOST=localhost
+# MYSQL_PORT=3306
 ```
 
 ### Template non trouvé ?
