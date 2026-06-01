@@ -83,50 +83,43 @@ echo -e "${BLUE}🔄 Étape 2: Clonage du repository...${NC}"
 echo "   → $REPO_URL"
 cd "$BASE_PATH" || exit 1
 
-# Essayer de cloner avec plus d'info
-CLONE_OUTPUT=$(git clone "$REPO_URL" 2>&1)
-CLONE_STATUS=$?
-
-if [ $CLONE_STATUS -ne 0 ]; then
-    echo -e "${RED}❌ Erreur lors du clonage du repository${NC}"
-    echo "   Détail de l'erreur:"
-    echo "$CLONE_OUTPUT"
-    exit 1
-fi
-
-# Vérifier que le répertoire existe
-if [ ! -d "$PROJECT_PATH" ]; then
-    echo -e "${RED}❌ Le répertoire $PROJECT_PATH n'a pas été créé${NC}"
-    echo "   Contenu de $BASE_PATH:"
-    ls -la "$BASE_PATH"
-    exit 1
-fi
-
-echo -e "${GREEN}✅ Repository cloné avec succès${NC}"
+# Cloner le repository
+git clone "$REPO_URL" 2>&1
+echo -e "${GREEN}✅ Commande de clone exécutée${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Étape 3: Accéder au répertoire du projet
+# Étape 3: Vérifier que le clone a fonctionné
 # ═══════════════════════════════════════════════════════════════════════════
 
-echo -e "${BLUE}📂 Étape 3: Accès au répertoire du projet...${NC}"
-
-# Attendre que le système synchronise le système de fichiers
-sleep 1
+echo -e "${BLUE}� Étape 3: Vérification du clone...${NC}"
 
 if [ ! -d "$PROJECT_PATH" ]; then
-    echo -e "${RED}❌ Le répertoire $PROJECT_PATH n'existe pas${NC}"
-    echo "   Vérification du contenu de $BASE_PATH:"
+    echo -e "${RED}❌ ERREUR: Le répertoire $PROJECT_PATH n'existe pas!${NC}"
+    echo ""
+    echo "📋 DIAGNOSTIC:"
+    echo "   Contenu de $BASE_PATH:"
     ls -la "$BASE_PATH"
+    echo ""
+    echo "   Commandes à essayer manuellement:"
+    echo "   1. cd /var/www"
+    echo "   2. git clone https://github.com/glufy100/SAE203.git"
+    echo "   3. cd SAE203"
+    echo "   4. ls -la"
+    echo ""
     exit 1
 fi
 
+echo -e "${GREEN}✅ Répertoire trouvé${NC}"
+echo ""
+
+# Accéder au répertoire
 cd "$PROJECT_PATH" || {
     echo -e "${RED}❌ Impossible d'accéder à $PROJECT_PATH${NC}"
     exit 1
 }
 
-echo -e "${GREEN}✅ Répertoire accessible$(pwd)${NC}"
+echo -e "${GREEN}✅ Répertoire accessible: $(pwd)${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
