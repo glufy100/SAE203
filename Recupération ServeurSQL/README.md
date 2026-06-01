@@ -21,6 +21,22 @@ systemctl stop NetworkManager
 systemctl disable NetworkManager
 ```
 
+### 1.1 S'affecter une IP via le DHCP 
+
+```bash
+nano /etc/newtork/interface
+```
+Souvent enp0s3
+```bash
+auto enp0s3
+iface enp0s3 inet dhcp
+```
+
+Puis il faut restart
+
+```bash
+systemctl restart networking
+```
 ---
 
 ### 2. Installer MariaDB
