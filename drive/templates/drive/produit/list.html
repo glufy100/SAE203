@@ -2,13 +2,13 @@
 {% block title %}Produits - Drive{% endblock %}
 {% block content %}
 
-<!-- EN-TÊTE -->
+<!-- Liste des produits -->
 <div class="header">
     <h1>📦 Produits</h1>
     <a href="{% url 'produit_create' %}" class="btn btn-success">➕ Nouveau produit</a>
 </div>
 
-<!-- TABLEAU PRODUITS -->
+<!-- Tableau principal ou message vide -->
 {% if produits %}
 <table class="table">
     <thead>
@@ -42,7 +42,7 @@
     </tbody>
 </table>
 
-<!-- ÉTAT VIDE -->
+<!-- Etat vide -->
 {% else %}
 <div class="empty">
     <p>Aucun produit trouvé.</p>

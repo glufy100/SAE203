@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+# On garde les routes admin a la racine Django et on delegue toute l'app metier au module drive.
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('drive/', include('drive.urls')),

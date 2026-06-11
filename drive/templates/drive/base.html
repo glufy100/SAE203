@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{% static 'drive/style.css' %}">
 </head>
 <body>
+    <!-- Navigation principale de l'application -->
     <nav>
         <ul>
             <li><a href="{% url 'categorie_list' %}">Catégories</a></li>
@@ -17,7 +18,9 @@
             <li><a href="/admin/">Admin</a></li>
         </ul>
     </nav>
+    <!-- Zone de contenu commune a toutes les pages -->
     <div class="container">
+        <!-- Messages flash Django -->
         {% if messages %}
         <div class="messages">
             {% for message in messages %}
@@ -29,6 +32,7 @@
         {% endif %}
         {% block content %}{% endblock %}
     </div>
+    <!-- Script de base partage par les vues produit/commande -->
     <script src="{% static 'drive/autocomplete.js' %}"></script>
 </body>
 </html>

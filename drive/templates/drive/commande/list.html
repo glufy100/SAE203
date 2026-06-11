@@ -1,11 +1,13 @@
 {% extends 'drive/base.html' %}
 {% block title %}Commandes - Drive{% endblock %}
 {% block content %}
+<!-- Liste des commandes -->
 <div class="header">
     <h1>Commandes</h1>
     <a href="{% url 'commande_create' %}" class="btn btn-success">Nouvelle commande</a>
 </div>
 
+<!-- Tableau principal ou etat vide -->
 {% if commandes %}
 <table class="table">
     <thead>
@@ -33,6 +35,7 @@
     </tbody>
 </table>
 {% else %}
+<!-- Etat vide -->
 <div class="empty">
     <p>Aucune commande trouvée.</p>
     <a href="{% url 'commande_create' %}" class="btn btn-success">Créer une commande</a>

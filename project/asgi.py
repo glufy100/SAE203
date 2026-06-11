@@ -11,6 +11,7 @@ import os
 
 from django.core.asgi import get_asgi_application
 
+# Configuration ASGI utilisee par les serveurs compatibles async.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
 
 application = get_asgi_application()

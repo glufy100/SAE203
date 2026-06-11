@@ -1,6 +1,7 @@
 {% extends 'drive/base.html' %}
 {% block title %}{{ client.prenom }} {{ client.nom }} - Détails Client - Drive{% endblock %}
 {% block content %}
+<!-- Fiche detaillee du client et son historique -->
 <div class="header">
     <h1>{{ client.prenom }} {{ client.nom }}</h1>
     <p><strong>Numéro:</strong> #{{ client.numero_client }} | <strong>Inscription:</strong> {{ client.date_inscription|date:"d/m/Y" }}</p>
@@ -12,6 +13,7 @@
     <a href="{% url 'client_list' %}" class="btn">← Retour</a>
 </div>
 <div>
+    <!-- Historique des commandes du client -->
     <h2>Historique des commandes ({{ commandes_avec_totaux|length }})</h2>
     {% if commandes_avec_totaux %}
     <div class="stack">

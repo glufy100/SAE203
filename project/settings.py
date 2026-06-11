@@ -73,19 +73,40 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sae203',
-        'USER': 'django',
-        'PASSWORD': 'motdepasse',
-        'HOST': '10.128.207.87',
-        'PORT': '3306',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
+import socket
+
+
+# On teste la disponibilite du serveur MySQL pour basculer automatiquement sur SQLite en local.
+def check_mysql_available():
+    try:
+        socket.create_connection(('10.128.207.87', 3306), timeout=2)
+        return True
+    except (socket.timeout, socket.error, OSError):
+        return False
+
+# Base de donnees de production ou de salle de test.
+if check_mysql_available():
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'sae203',
+            'USER': 'django',
+            'PASSWORD': 'motdepasse',
+            'HOST': '10.128.207.87',
+            'PORT': '3306',
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
     }
-}
+else:
+    # Base locale de secours pour continuer a developper hors reseau.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -110,10 +131,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
+# Le projet est géré en anglais coté Django mais l'interface utilisateur reste en francais.
 LANGUAGE_CODE = 'en-us'
 
+# Fuseau par defaut pour les dates affichees dans les commandes et inscriptions.
 TIME_ZONE = 'UTC'
 
+# Activation des traductions et des conversions de temps automatiques.
 USE_I18N = True
 
 USE_TZ = True
@@ -122,9 +146,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+# Les assets statiques sont servis via le dossier static de l'application.
 STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
+# Cle primaire bigint par defaut pour eviter les limites des entiers classiques.
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

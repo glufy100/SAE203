@@ -2,7 +2,7 @@
 {% block title %}Commande #{{ commande.numero_commande }} - Drive{% endblock %}
 {% block content %}
 
-<!-- SECTION 1: EN-TÊTE -->
+<!-- En-tete de la commande -->
 <div class="header">
     <h1>Commande #{{ commande.numero_commande }}</h1>
     <p>
@@ -14,7 +14,7 @@
     <p><strong>Date:</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}</p>
 </div>
 
-<!-- SECTION 2: PRODUITS DE LA COMMANDE -->
+<!-- Produits deja presentes dans la commande -->
 {% if lignes %}
 <table class="table">
     <thead>
@@ -31,7 +31,7 @@
         <tr>
             <td>{{ ligne.produit.nom }}</td>
             <td>{{ ligne.produit.prix|floatformat:2 }}€</td>
-            <!-- COLONNE: MODIFIER QUANTITÉ -->
+            <!-- Modification inline de la quantite -->
             <td>
                 <form method="POST" action="{% url 'commande_update_produit' commande.numero_commande ligne.id %}" class="inline-form">
                     {% csrf_token %}
@@ -40,7 +40,7 @@
                 </form>
             </td>
             <td><strong>{{ ligne.get_total|floatformat:2 }}€</strong></td>
-            <!-- COLONNE: SUPPRIMER -->
+            <!-- Suppression d'une ligne de commande -->
             <td>
                 <form method="POST" action="{% url 'commande_delete_produit' commande.numero_commande ligne.id %}">
                     {% csrf_token %}
@@ -56,13 +56,13 @@
 <div class="empty"><p>Aucun produit dans cette commande.</p></div>
 {% endif %}
 
-<!-- SECTION 3: AJOUTER UN PRODUIT -->
+<!-- Formulaire d'ajout d'un produit a la commande -->
 <div class="panel">
     <h3>➕ Ajouter un produit</h3>
     <form method="POST" action="{% url 'commande_add_produit' commande.numero_commande %}" class="form-row">
         {% csrf_token %}
 
-        <!-- INPUT: SÉLECTIONNER PRODUIT AVEC INFOS -->
+        <!-- Select du produit avec bloc d'infos contextuelles -->
         <div class="form-group" style="flex: 2;">
             <label for="produit_id">Produit *</label>
             <select id="produit_id" name="produit_id" required>
@@ -73,7 +73,7 @@
                 </option>
                 {% endfor %}
             </select>
-            <!-- AFFICHAGE DES INFOS -->
+            <!-- Apercu des attributs du produit selectionne -->
             <div id="product-info" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px; display: none;">
                 <small>
                     <strong>Catégorie:</strong> <span id="info-categorie"></span><br>
@@ -83,17 +83,17 @@
             </div>
         </div>
 
-        <!-- INPUT: QUANTITÉ -->
+        <!-- Saisie de la quantite -->
         <div class="form-group form-group-small">
             <label for="quantite">Quantité</label>
             <input type="number" id="quantite" name="quantite" value="1" min="1" required>
         </div>
 
-        <!-- BOUTON: AJOUTER -->
+        <!-- Validation de l'ajout -->
         <button type="submit" class="btn btn-success">Ajouter</button>
     </form>
 
-    <!-- SCRIPT: AFFICHER LES INFOS DU PRODUIT -->
+    <!-- Script local pour afficher les details du produit selectionne -->
     <script>
     document.getElementById('produit_id').addEventListener('change', function() {
         const option = this.options[this.selectedIndex];
@@ -110,32 +110,49 @@
     </script>
 </div>
 
-<!-- SECTION 4: ACTIONS -->
+<!-- Actions globales de la commande -->
 <div class="header-actions">
     <a href="{% url 'commande_delete' commande.numero_commande %}" class="btn btn-danger">Supprimer la commande</a>
     <a href="{% url 'commande_list' %}" class="btn">← Retour</a>
 </div>
 
-<!-- SCRIPT: AUTOCOMPLETE -->
+<!-- Autocomplete local pour la recherche de produits -->
 <script>
+// URL de l'API utilisee par l'autocomplete local de cette page.
 const API_URL = "{% url 'api_produits_search' %}";
 
-document.addEventListener('DOMContentLoaded', function() {
+/**
+ * Active l'autocomplete specifique a la page detail de commande.
+ * Entree:
+ * - aucun parametre; le script lit directement les elements de la page.
+ * Sortie:
+ * - aucune; installe les ecouteurs et controle l'UI.
+ */
+function initCommandeAutocomplete() {
     const searchInput = document.getElementById('produit_search');
     const selectInput = document.getElementById('produit_id');
     const quantiteInput = document.getElementById('quantite');
-    const formGroup = searchInput.parentElement;
 
-    if (!searchInput || !selectInput) {
-        console.error('Éléments HTML manquants');
+    // Le bloc de recherche est l'enveloppe du champ texte.
+    const formGroup = searchInput ? searchInput.parentElement : null;
+
+    // Si le markup attendu est absent, on abandonne sans bloquer la page.
+    if (!searchInput || !selectInput || !formGroup) {
+        console.error('Elements HTML manquants');
         return;
     }
 
-    let timeoutId;
+    let timeoutId = null;
     let suggestionsBox = null;
 
-    // Créer la boîte de suggestions
-    function createSuggestionsBox() {
+    /**
+     * Cree la zone de suggestions sous le champ de recherche.
+     * Entree:
+     * - formGroup: conteneur HTML qui recevra le bloc.
+     * Sortie:
+     * - HTMLElement de la zone de suggestions.
+     */
+    function createSuggestionsBox(formGroupElement) {
         const box = document.createElement('div');
         box.className = 'autocomplete-suggestions';
         box.style.position = 'absolute';
@@ -145,88 +162,167 @@ document.addEventListener('DOMContentLoaded', function() {
         box.style.zIndex = '1000';
         box.style.display = 'none';
         box.style.marginTop = '0';
-        formGroup.appendChild(box);
+        formGroupElement.appendChild(box);
         return box;
     }
 
-    // Écouter le focus
-    searchInput.addEventListener('focus', function() {
-        if (!suggestionsBox) {
-            suggestionsBox = createSuggestionsBox();
+    /**
+     * Masque la zone de suggestions.
+     * Entree:
+     * - box: element DOM a masquer.
+     * Sortie:
+     * - aucune.
+     */
+    function hideSuggestions(box) {
+        if (box) {
+            box.style.display = 'none';
         }
-    });
+    }
 
-    // Écouter l'input (tape au clavier)
-    searchInput.addEventListener('input', function() {
-        clearTimeout(timeoutId);
-        const query = this.value.trim();
+    /**
+     * Ajoute ou selectionne un produit dans le select.
+     * Entree:
+     * - produit: objet JSON contenant au moins id, nom, prix.
+     * Sortie:
+     * - aucune; met a jour le select et le champ de recherche.
+     */
+    function selectProduit(produit) {
+        let option = selectInput.querySelector(`option[value="${produit.id}"]`);
+        if (!option) {
+            option = document.createElement('option');
+            option.value = produit.id;
+            option.textContent = `${produit.nom} (${produit.prix}€)`;
+            selectInput.appendChild(option);
+        }
 
-        if (query.length < 1) {
-            if (suggestionsBox) suggestionsBox.style.display = 'none';
+        selectInput.value = produit.id;
+        searchInput.value = produit.nom;
+        hideSuggestions(suggestionsBox);
+
+        // On enchaine directement sur la quantite pour reduire les saisies inutiles.
+        quantiteInput.focus();
+    }
+
+    /**
+     * Affiche le resultat d'une recherche sous forme de suggestions cliquables.
+     * Entree:
+     * - produits: tableau de produits renvoyes par l'API.
+     * Sortie:
+     * - aucune; remplit le bloc HTML.
+     */
+    function renderSuggestions(produits) {
+        if (!suggestionsBox) {
             return;
         }
 
+        suggestionsBox.innerHTML = '';
+
+        // Aucun produit: on le signale explicitement.
+        if (!produits || produits.length === 0) {
+            suggestionsBox.innerHTML = '<div class="autocomplete-item-empty">❌ Aucun produit trouvé</div>';
+            suggestionsBox.style.display = 'block';
+            return;
+        }
+
+        // Chaque produit devient un choix visuel et cliquable.
+        produits.forEach((produit) => {
+            const item = document.createElement('div');
+            item.className = 'autocomplete-item';
+            item.innerHTML = `
+                <strong>${produit.nom}</strong>
+                <br><small>${produit.categorie} • ${produit.prix}€ • ${produit.marque}</small>
+            `;
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', function onSuggestionClick() {
+                selectProduit(produit);
+                console.log('Produit sélectionné:', produit.nom);
+            });
+            suggestionsBox.appendChild(item);
+        });
+
+        suggestionsBox.style.display = 'block';
+    }
+
+    /**
+     * Lance une requete de recherche vers l'API.
+     * Entree:
+     * - query: texte saisi par l'utilisateur.
+     * Sortie:
+     * - Promise<void>; met a jour l'interface a la resolution.
+     */
+    function fetchSuggestions(query) {
         console.log('Recherche:', query, 'API:', API_URL);
+        return fetch(API_URL + '?q=' + encodeURIComponent(query))
+            .then((response) => {
+                // On remonte l'erreur HTTP pour afficher un message lisible dans l'UI.
+                if (!response.ok) {
+                    throw new Error('Erreur API');
+                }
+                return response.json();
+            })
+            .then((data) => {
+                console.log('Résultats:', data);
+                renderSuggestions(data.produits);
+            })
+            .catch((error) => {
+                // En cas de probleme reseau ou de reponse invalide, on affiche un retour clair.
+                console.error('Erreur API:', error);
+                if (suggestionsBox) {
+                    suggestionsBox.innerHTML = '<div class="autocomplete-item-empty">⚠️ Erreur API</div>';
+                    suggestionsBox.style.display = 'block';
+                }
+            });
+    }
+
+    /**
+     * Gere la frappe dans le champ de recherche.
+     * Entree:
+     * - event: evenement input du champ texte.
+     * Sortie:
+     * - aucune; declenche une recherche differée si besoin.
+     */
+    function handleSearchInput(event) {
+        clearTimeout(timeoutId);
+        const query = event.target.value.trim();
+
+        if (query.length < 1) {
+            hideSuggestions(suggestionsBox);
+            return;
+        }
+
         timeoutId = setTimeout(() => {
-            fetch(API_URL + '?q=' + encodeURIComponent(query))
-                .then(response => {
-                    if (!response.ok) throw new Error('Erreur API');
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Résultats:', data);
-                    if (suggestionsBox) {
-                        suggestionsBox.innerHTML = '';
-
-                        if (data.produits.length === 0) {
-                            suggestionsBox.innerHTML = '<div class="autocomplete-item-empty">❌ Aucun produit trouvé</div>';
-                        } else {
-                            data.produits.forEach(produit => {
-                                const item = document.createElement('div');
-                                item.className = 'autocomplete-item';
-                                item.innerHTML = `
-                                    <strong>${produit.nom}</strong>
-                                    <br><small>${produit.categorie} • ${produit.prix}€ • ${produit.marque}</small>
-                                `;
-                                item.style.cursor = 'pointer';
-                                item.onclick = () => {
-                                    // Ajouter l'option si elle n'existe pas
-                                    let option = selectInput.querySelector(`option[value="${produit.id}"]`);
-                                    if (!option) {
-                                        option = document.createElement('option');
-                                        option.value = produit.id;
-                                        option.textContent = `${produit.nom} (${produit.prix}€)`;
-                                        selectInput.appendChild(option);
-                                    }
-                                    selectInput.value = produit.id;
-                                    searchInput.value = produit.nom;
-                                    suggestionsBox.style.display = 'none';
-                                    quantiteInput.focus();
-                                    console.log('Produit sélectionné:', produit.nom);
-                                };
-                                suggestionsBox.appendChild(item);
-                            });
-                        }
-                        suggestionsBox.style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur API:', error);
-                    if (suggestionsBox) {
-                        suggestionsBox.innerHTML = '<div class="autocomplete-item-empty">⚠️ Erreur API</div>';
-                        suggestionsBox.style.display = 'block';
-                    }
-                });
+            fetchSuggestions(query);
         }, 300);
-    });
+    }
 
-    // Fermer les suggestions au clic ailleurs
-    document.addEventListener('click', function(e) {
-        if (e.target !== searchInput && suggestionsBox) {
-            suggestionsBox.style.display = 'none';
+    /**
+     * Ferme l'autocomplete si le clic a lieu ailleurs dans la page.
+     * Entree:
+     * - event: MouseEvent global.
+     * Sortie:
+     * - aucune; masque la zone si necessaire.
+     */
+    function handleDocumentClick(event) {
+        if (event.target !== searchInput && suggestionsBox) {
+            hideSuggestions(suggestionsBox);
+        }
+    }
+
+    // On cree la zone de suggestions seulement quand l'utilisateur commence a interagir.
+    searchInput.addEventListener('focus', function onSearchFocus() {
+        if (!suggestionsBox) {
+            suggestionsBox = createSuggestionsBox(formGroup);
         }
     });
-});
+
+    // Chaque saisie declenche un filtrage differé.
+    searchInput.addEventListener('input', handleSearchInput);
+
+    // On ferme la liste lorsqu'on clique ailleurs dans la page.
+    document.addEventListener('click', handleDocumentClick);
+}
+
+document.addEventListener('DOMContentLoaded', initCommandeAutocomplete);
 </script>
 
 {% endblock %}

@@ -2,13 +2,13 @@
 {% block title %}Clients - Drive{% endblock %}
 {% block content %}
 
-<!-- EN-TÊTE -->
+<!-- Liste des clients -->
 <div class="header">
     <h1>👥 Clients</h1>
     <a href="{% url 'client_create' %}" class="btn btn-success">➕ Nouveau client</a>
 </div>
 
-<!-- TABLEAU CLIENTS -->
+<!-- Tableau principal ou etat vide -->
 {% if clients %}
 <table class="table">
     <thead>
@@ -41,7 +41,7 @@
     </tbody>
 </table>
 
-<!-- ÉTAT VIDE -->
+<!-- Etat vide -->
 {% else %}
 <div class="empty">
     <p>Aucun client trouvé.</p>

@@ -1,3 +1,3 @@
 from django.test import TestCase
 
-# Create your tests here.
+# Fichier reserve aux tests unitaires de l'application Drive.

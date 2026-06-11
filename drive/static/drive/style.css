@@ -1,4 +1,5 @@
-/* Styles projet Drive - Basé sur Bulletin BUT par Seb. L. 2021-12-06 */
+/* Styles projet Drive - Base visuelle commune de l'application */
+/* Palette et variables */
 :root {
 	--releve-principale: #2c3e50;
     --releve-fond-titre-ue: #34495e;
@@ -16,8 +17,10 @@
     --secondaire-contenu: white;
 }
 
+/* Reset global minimal */
 * {margin: 0; padding: 0; box-sizing: border-box;}
 
+/* Typographie et fond de page */
 body {
 	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 	background-color: var(--fond);
@@ -254,7 +257,7 @@ textarea {resize: vertical; min-height: 100px;}
 	nav ul {gap: 1rem;}
 }
 
-/* Autocomplete */
+/* Bloc autocomplete pour la recherche de produits */
 .autocomplete-suggestions {
 	border: 1px solid var(--gris-estompe);
 	border-radius: 0 0 4px 4px;
@@ -283,4 +286,3 @@ textarea {resize: vertical; min-height: 100px;}
 	color: var(--gris);
 	font-style: italic;
 }
-

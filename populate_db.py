@@ -7,7 +7,7 @@ django.setup()
 from drive.models import Categorie, Produit, Client, Commande, LigneCommande
 from datetime import datetime, timedelta
 
-# Effacer les données existantes
+# Le script reconstruit une base de demo complete, donc on repart d'un etat vide.
 print("🗑️ Suppression des données existantes...")
 Categorie.objects.all().delete()
 Produit.objects.all().delete()
@@ -16,9 +16,10 @@ Commande.objects.all().delete()
 LigneCommande.objects.all().delete()
 
 # ════════════════════════════════════════════════════════════════════════════
-# CATÉGORIES
+# CATEGORIES
 # ════════════════════════════════════════════════════════════════════════════
 
+# Les categories servent de referentiel pour les produits de demo.
 print("📂 Création de 50 catégories...")
 categories_data = [
     ("Boissons", "Boissons fraiches et gazeuses"),
@@ -75,6 +76,7 @@ categories_data = [
 
 categories = []
 for nom, descriptif in categories_data:
+    # On conserve les objets crees en memoire pour reutiliser directement leurs FK.
     cat = Categorie.objects.create(nom=nom, descriptif=descriptif)
     categories.append(cat)
     print(f"  ✓ {nom}")
@@ -83,6 +85,7 @@ for nom, descriptif in categories_data:
 # PRODUITS
 # ════════════════════════════════════════════════════════════════════════════
 
+# Les produits sont repartis sur les categories creees juste au-dessus.
 print("\n📦 Création de 50 produits...")
 produits_data = [
     ("Coca-Cola 1.5L", datetime.now() + timedelta(days=365), "coca.jpg", "Coca-Cola", 2.50, categories[0]),
@@ -138,6 +141,7 @@ produits_data = [
 
 produits = []
 for nom, date, photo, marque, prix, categorie in produits_data:
+    # Chaque tuple definit un produit de demonstration complet et directement exploitable.
     prod = Produit.objects.create(
         nom=nom,
         date_peremption=date,
@@ -153,6 +157,7 @@ for nom, date, photo, marque, prix, categorie in produits_data:
 # CLIENTS
 # ════════════════════════════════════════════════════════════════════════════
 
+# Les clients fournissent une base realiste pour tester les vues detaillees et les commandes.
 print("\n👤 Création de 50 clients...")
 clients_data = [
     ("Dupont", "Jean", "2026-01-15", "12 rue des Fleurs, 68100 Mulhouse"),
@@ -209,6 +214,7 @@ clients_data = [
 
 clients = []
 for nom, prenom, date, adresse in clients_data:
+    # Les dates sont converties par Django a l'enregistrement.
     client = Client.objects.create(
         nom=nom,
         prenom=prenom,
@@ -222,6 +228,7 @@ for nom, prenom, date, adresse in clients_data:
 # COMMANDES
 # ════════════════════════════════════════════════════════════════════════════
 
+# Les commandes sont distribuees sur l'ensemble des clients pour simuler une utilisation normale.
 print("\n🧾 Création de 50 commandes...")
 commandes = []
 for i in range(50):
@@ -237,6 +244,7 @@ for i in range(50):
 # LIGNES DE COMMANDE
 # ════════════════════════════════════════════════════════════════════════════
 
+# Chaque commande recoit plusieurs lignes afin de tester les totaux et les relations SQL.
 print("\n🧮 Création de lignes de commande...")
 # Pour chaque commande, ajouter 2-3 produits
 import random
