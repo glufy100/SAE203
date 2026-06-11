@@ -36,10 +36,10 @@ fi
 
 echo -e "${BLUE}📦 Étape 0: Installation des paquets système...${NC}"
 echo "   → Mise à jour de la liste des paquets..."
-apt-get update -qq 2>/dev/null || apt-get update
+apt-get update -y 2>&1 | tail -3
 
 echo "   → Installation de git, python3, pip, wget, curl, apache2..."
-apt-get install -y -qq \
+apt-get install -y \
     git \
     python3 \
     python3-pip \
@@ -49,15 +49,46 @@ apt-get install -y -qq \
     apache2 \
     apache2-utils \
     libapache2-mod-proxy-http \
-    2>/dev/null
+    2>&1 | grep -E "Setting up|already|done"
 
-# Vérifier que git est bien installé
+# Vérifier les installations critiques
+echo "   → Vérification des installations..."
+MISSING=0
+
 if ! command -v git &> /dev/null; then
-    echo -e "${RED}❌ git n'a pas pu être installé${NC}"
+    echo -e "   ${RED}❌ git manquant${NC}"
+    MISSING=$((MISSING + 1))
+else
+    echo -e "   ${GREEN}✅ git installé$(git --version)${NC}"
+fi
+
+if ! command -v python3 &> /dev/null; then
+    echo -e "   ${RED}❌ python3 manquant${NC}"
+    MISSING=$((MISSING + 1))
+else
+    echo -e "   ${GREEN}✅ python3 installé$(python3 --version)${NC}"
+fi
+
+if ! command -v pip3 &> /dev/null; then
+    echo -e "   ${RED}❌ pip3 manquant${NC}"
+    MISSING=$((MISSING + 1))
+else
+    echo -e "   ${GREEN}✅ pip3 installé$(pip3 --version | head -1)${NC}"
+fi
+
+if ! command -v apache2 &> /dev/null; then
+    echo -e "   ${RED}❌ apache2 manquant${NC}"
+    MISSING=$((MISSING + 1))
+else
+    echo -e "   ${GREEN}✅ apache2 installé${NC}"
+fi
+
+if [ $MISSING -gt 0 ]; then
+    echo -e "${RED}❌ $MISSING paquets critiques manquent!${NC}"
     exit 1
 fi
 
-echo -e "${GREEN}✅ Paquets système installés${NC}"
+echo -e "${GREEN}✅ Tous les paquets installés${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -83,50 +114,43 @@ echo -e "${BLUE}🔄 Étape 2: Clonage du repository...${NC}"
 echo "   → $REPO_URL"
 cd "$BASE_PATH" || exit 1
 
-# Essayer de cloner avec plus d'info
-CLONE_OUTPUT=$(git clone "$REPO_URL" 2>&1)
-CLONE_STATUS=$?
-
-if [ $CLONE_STATUS -ne 0 ]; then
-    echo -e "${RED}❌ Erreur lors du clonage du repository${NC}"
-    echo "   Détail de l'erreur:"
-    echo "$CLONE_OUTPUT"
-    exit 1
-fi
-
-# Vérifier que le répertoire existe
-if [ ! -d "$PROJECT_PATH" ]; then
-    echo -e "${RED}❌ Le répertoire $PROJECT_PATH n'a pas été créé${NC}"
-    echo "   Contenu de $BASE_PATH:"
-    ls -la "$BASE_PATH"
-    exit 1
-fi
-
-echo -e "${GREEN}✅ Repository cloné avec succès${NC}"
+# Cloner le repository
+git clone "$REPO_URL" 2>&1
+echo -e "${GREEN}✅ Commande de clone exécutée${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Étape 3: Accéder au répertoire du projet
+# Étape 3: Vérifier que le clone a fonctionné
 # ═══════════════════════════════════════════════════════════════════════════
 
-echo -e "${BLUE}📂 Étape 3: Accès au répertoire du projet...${NC}"
-
-# Attendre que le système synchronise le système de fichiers
-sleep 1
+echo -e "${BLUE}� Étape 3: Vérification du clone...${NC}"
 
 if [ ! -d "$PROJECT_PATH" ]; then
-    echo -e "${RED}❌ Le répertoire $PROJECT_PATH n'existe pas${NC}"
-    echo "   Vérification du contenu de $BASE_PATH:"
+    echo -e "${RED}❌ ERREUR: Le répertoire $PROJECT_PATH n'existe pas!${NC}"
+    echo ""
+    echo "📋 DIAGNOSTIC:"
+    echo "   Contenu de $BASE_PATH:"
     ls -la "$BASE_PATH"
+    echo ""
+    echo "   Commandes à essayer manuellement:"
+    echo "   1. cd /var/www"
+    echo "   2. git clone https://github.com/glufy100/SAE203.git"
+    echo "   3. cd SAE203"
+    echo "   4. ls -la"
+    echo ""
     exit 1
 fi
 
+echo -e "${GREEN}✅ Répertoire trouvé${NC}"
+echo ""
+
+# Accéder au répertoire
 cd "$PROJECT_PATH" || {
     echo -e "${RED}❌ Impossible d'accéder à $PROJECT_PATH${NC}"
     exit 1
 }
 
-echo -e "${GREEN}✅ Répertoire accessible$(pwd)${NC}"
+echo -e "${GREEN}✅ Répertoire accessible: $(pwd)${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -147,7 +171,8 @@ files=("manage.py" "populate_db.py" "requirements.txt" "project/settings.py" "de
 all_ok=true
 for file in "${files[@]}"; do
     if [ -f "$file" ]; then
-        echo -e "   ${GREEN}✅ $file${NC}"
+        SIZE=$(wc -c < "$file")
+        echo -e "   ${GREEN}✅ $file${NC} ($SIZE bytes)"
     else
         echo -e "   ${RED}❌ $file (MANQUANT)${NC}"
         all_ok=false
@@ -157,29 +182,42 @@ echo ""
 
 if [ "$all_ok" = false ]; then
     echo -e "${RED}❌ Certains fichiers sont manquants!${NC}"
+    echo "   Fichiers actuels:"
+    ls -la
     exit 1
 fi
+
+echo -e "${GREEN}✅ Tous les fichiers présents${NC}"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Étape 6: Installer les dépendances Python
 # ═══════════════════════════════════════════════════════════════════════════
 
 echo -e "${BLUE}🐍 Étape 6: Installation des dépendances Python...${NC}"
-echo "   → Vérification de requirements.txt..."
-if [ -f "requirements.txt" ]; then
-    echo "   → Mise à jour de pip..."
-    pip3 install --upgrade pip setuptools wheel 2>&1 | grep -i "success\|successfully" > /dev/null && echo "      ✅ pip mis à jour" || echo "      ⚠️  pip update"
-    
-    echo "   → Installation des dépendances..."
-    if pip3 install -r requirements.txt 2>&1 | tee /tmp/pip_install.log | grep -i "error"; then
-        echo -e "${RED}❌ Erreur lors de l'installation des dépendances${NC}"
-        echo "   Détails: tail /tmp/pip_install.log"
-        tail -10 /tmp/pip_install.log
-    else
-        echo -e "${GREEN}✅ Dépendances Python installées${NC}"
-    fi
+
+if [ ! -f "requirements.txt" ]; then
+    echo -e "${RED}❌ requirements.txt non trouvé!${NC}"
+    exit 1
+fi
+
+echo "   → Contenu de requirements.txt:"
+cat requirements.txt | sed 's/^/      /'
+echo ""
+
+echo "   → Mise à jour de pip..."
+pip3 install --upgrade pip setuptools wheel 2>&1 | tail -2
+echo -e "   ${GREEN}✅ pip mis à jour${NC}"
+
+echo "   → Installation des dépendances Python..."
+if pip3 install -r requirements.txt 2>&1 | tee /tmp/pip_install.log; then
+    echo -e "${GREEN}✅ Dépendances Python installées${NC}"
+    echo "   → Vérification des dépendances:"
+    pip3 list | grep -E "Django|PyMySQL|asgiref|sqlparse" | sed 's/^/      /'
 else
-    echo -e "${YELLOW}⚠️  requirements.txt non trouvé${NC}"
+    echo -e "${RED}❌ Erreur lors de l'installation des dépendances${NC}"
+    echo "   Détails complets:"
+    cat /tmp/pip_install.log
+    exit 1
 fi
 echo ""
 
@@ -221,6 +259,67 @@ else
     else
         echo -e "${YELLOW}⚠️  Apache n'est pas actif${NC}"
     fi
+fi
+echo ""
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Vérification complète finale
+# ═══════════════════════════════════════════════════════════════════════════
+
+echo -e "${BLUE}✅ Vérification complète finale du déploiement...${NC}"
+echo ""
+
+VERIFICATION_ERRORS=0
+
+# Vérifier que les fichiers critiques existent et ont du contenu
+echo "   📝 Vérification des fichiers:"
+for file in "manage.py" "requirements.txt" "populate_db.py" "setup-apache.sh" "start-django.sh"; do
+    if [ -f "$file" ]; then
+        SIZE=$(wc -c < "$file")
+        if [ "$SIZE" -gt 0 ]; then
+            echo -e "      ${GREEN}✅ $file${NC} ($SIZE bytes)"
+        else
+            echo -e "      ${RED}❌ $file vide!${NC}"
+            VERIFICATION_ERRORS=$((VERIFICATION_ERRORS + 1))
+        fi
+    else
+        echo -e "      ${RED}❌ $file manquant!${NC}"
+        VERIFICATION_ERRORS=$((VERIFICATION_ERRORS + 1))
+    fi
+done
+echo ""
+
+# Vérifier que les commandes essentielles fonctionnent
+echo "   🔧 Vérification des commandes système:"
+for cmd in "python3 --version" "git --version" "pip3 --version" "apache2ctl -v"; do
+    if eval "$cmd" > /dev/null 2>&1; then
+        result=$(eval "$cmd" 2>&1 | head -1)
+        echo -e "      ${GREEN}✅ $result${NC}"
+    else
+        echo -e "      ${RED}❌ Commande échouée: $cmd${NC}"
+        VERIFICATION_ERRORS=$((VERIFICATION_ERRORS + 1))
+    fi
+done
+echo ""
+
+# Vérifier que les dépendances Python sont installées
+echo "   🐍 Vérification des dépendances Python:"
+for pkg in "Django" "PyMySQL" "asgiref" "sqlparse"; do
+    if python3 -c "import ${pkg,,}" 2>/dev/null; then
+        version=$(python3 -c "import ${pkg,,}; print(${pkg,,}.__version__)" 2>/dev/null)
+        echo -e "      ${GREEN}✅ $pkg v$version${NC}"
+    else
+        echo -e "      ${RED}❌ $pkg non installé!${NC}"
+        VERIFICATION_ERRORS=$((VERIFICATION_ERRORS + 1))
+    fi
+done
+echo ""
+
+# Afficher le résultat de la vérification
+if [ $VERIFICATION_ERRORS -eq 0 ]; then
+    echo -e "${GREEN}✅ Vérification réussie! Aucune erreur détectée.${NC}"
+else
+    echo -e "${RED}⚠️  $VERIFICATION_ERRORS erreur(s) détectée(s) lors de la vérification.${NC}"
 fi
 echo ""
 
