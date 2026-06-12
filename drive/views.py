@@ -1,3 +1,5 @@
+from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import Categorie, Produit, Client, Commande, LigneCommande
@@ -22,6 +24,44 @@ def home(request):
         'commandes_count': Commande.objects.count(),
     }
     return render(request, 'drive/home.html', context)
+
+
+# -----------------------------
+# API
+# -----------------------------
+def api_produits_search(request):
+    """Rechercher des produits pour l'autocomplete des commandes.
+
+    Entree:
+    - request: requete HTTP contenant un parametre `q`.
+
+    Sortie:
+    - JsonResponse avec une liste de produits compatibles avec l'autocomplete.
+    """
+    query = request.GET.get('q', '').strip()
+    produits = Produit.objects.select_related('categorie').all()
+
+    if query:
+        produits = produits.filter(
+            Q(nom__icontains=query)
+            | Q(marque__icontains=query)
+            | Q(categorie__nom__icontains=query)
+        )
+
+    produits = produits.order_by('nom')[:10]
+
+    return JsonResponse({
+        'produits': [
+            {
+                'id': produit.id,
+                'nom': produit.nom,
+                'prix': str(produit.prix),
+                'categorie': produit.categorie.nom,
+                'marque': produit.marque or '-',
+            }
+            for produit in produits
+        ]
+    })
 
 
 # -----------------------------

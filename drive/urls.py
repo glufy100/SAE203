@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('api/produits/search/', views.api_produits_search, name='api_produits_search'),
 
     # CRUD categories
     path('categories/', views.categorie_list, name='categorie_list'),
