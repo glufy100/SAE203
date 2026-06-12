@@ -4,6 +4,27 @@ from .models import Categorie, Produit, Client, Commande, LigneCommande
 
 
 # -----------------------------
+# ACCUEIL
+# -----------------------------
+def home(request):
+    """Afficher le tableau de bord principal de l'application.
+
+    Entree:
+    - request: requete HTTP entrante.
+
+    Sortie:
+    - HttpResponse rendant la page d'accueil du module Drive.
+    """
+    context = {
+        'categories_count': Categorie.objects.count(),
+        'produits_count': Produit.objects.count(),
+        'clients_count': Client.objects.count(),
+        'commandes_count': Commande.objects.count(),
+    }
+    return render(request, 'drive/home.html', context)
+
+
+# -----------------------------
 # CATEGORIES
 # -----------------------------
 def categorie_list(request):
