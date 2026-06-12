@@ -366,10 +366,19 @@ textarea {resize: vertical; min-height: 100px;}
 }
 
 /* Bloc autocomplete pour la recherche de produits */
+.autocomplete-field {
+	position: relative;
+}
+
 .autocomplete-suggestions {
+	position: absolute;
+	top: calc(100% + 4px);
+	left: 0;
+	right: 0;
+	z-index: 1000;
 	border: 1px solid var(--gris-estompe);
-	border-radius: 0 0 4px 4px;
 	background: var(--fond-clair);
+	border-radius: 0 0 4px 4px;
 	box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 

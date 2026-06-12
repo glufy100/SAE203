@@ -84,10 +84,14 @@ function initProductAutocomplete() {
             option = document.createElement('option');
             option.value = produit.id;
             option.textContent = produit.nom;
+            option.setAttribute('data-prix', produit.prix);
+            option.setAttribute('data-categorie', produit.categorie);
+            option.setAttribute('data-marque', produit.marque);
             selectInput.appendChild(option);
         }
 
         selectInput.value = produit.id;
+        selectInput.dispatchEvent(new Event('change', { bubbles: true }));
         searchInput.value = produit.nom;
         hideSuggestions(state.suggestionsBox);
 

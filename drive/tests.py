@@ -31,3 +31,40 @@ class HomeViewTests(TestCase):
         self.assertEqual(response.context['produits_count'], 1)
         self.assertEqual(response.context['clients_count'], 1)
         self.assertEqual(response.context['commandes_count'], 1)
+
+
+class CommandeAutocompleteTests(TestCase):
+    def setUp(self):
+        self.categorie = Categorie.objects.create(nom='Boissons', descriptif='Boissons fraîches')
+        self.produit_eau = Produit.objects.create(nom='Eau', prix=Decimal('1.50'), categorie=self.categorie)
+        self.produit_jus = Produit.objects.create(nom='Jus d\'orange', prix=Decimal('2.10'), categorie=self.categorie)
+        client = Client.objects.create(
+            nom='Dupont',
+            prenom='Alice',
+            date_inscription=date(2026, 6, 12),
+            adresse='1 rue de la Paix',
+        )
+        self.commande = Commande.objects.create(client=client)
+        LigneCommande.objects.create(commande=self.commande, produit=self.produit_eau, quantite=2)
+
+    def test_api_produits_search_returns_matching_products(self):
+        response = self.client.get(reverse('api_produits_search'), {'q': 'jus'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {
+            'produits': [
+                {
+                    'id': self.produit_jus.id,
+                    'nom': "Jus d'orange",
+                    'prix': '2.10',
+                    'categorie': 'Boissons',
+                    'marque': '-',
+                }
+            ]
+        })
+
+    def test_commande_detail_page_renders(self):
+        response = self.client.get(reverse('commande_detail', args=[self.commande.numero_commande]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Rechercher un produit')
