@@ -1,0 +1,63 @@
+{% extends 'drive/base.html' %}
+{% block title %}Accueil - Drive{% endblock %}
+{% block content %}
+<div class="dashboard">
+    <section class="dashboard-hero">
+        <span class="dashboard-eyebrow">Application Drive</span>
+        <h1>Tableau de bord</h1>
+        <p class="text-muted">Accédez rapidement aux catégories, produits, clients et commandes depuis un point d’entrée unique.</p>
+        <div class="header-actions">
+            <a href="{% url 'commande_create' %}" class="btn btn-success">Nouvelle commande</a>
+            <a href="{% url 'produit_create' %}" class="btn">Ajouter un produit</a>
+        </div>
+    </section>
+
+    <section class="summary-grid" aria-label="Statistiques principales">
+        <article class="summary-card">
+            <span class="summary-label">Catégories</span>
+            <strong>{{ categories_count }}</strong>
+            <span class="text-muted">Catégorie{{ categories_count|pluralize }}</span>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Produits</span>
+            <strong>{{ produits_count }}</strong>
+            <span class="text-muted">Produit{{ produits_count|pluralize }}</span>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Clients</span>
+            <strong>{{ clients_count }}</strong>
+            <span class="text-muted">Client{{ clients_count|pluralize }}</span>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Commandes</span>
+            <strong>{{ commandes_count }}</strong>
+            <span class="text-muted">Commande{{ commandes_count|pluralize }}</span>
+        </article>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2 class="card-title">Accès rapide</h2>
+            <span class="text-muted">Ouvrir directement une section</span>
+        </div>
+        <div class="action-grid">
+            <a href="{% url 'categorie_list' %}" class="action-link">
+                <strong>Catégories</strong>
+                <span>Consulter ou créer des catégories.</span>
+            </a>
+            <a href="{% url 'produit_list' %}" class="action-link">
+                <strong>Produits</strong>
+                <span>Gérer le catalogue et les fiches produits.</span>
+            </a>
+            <a href="{% url 'client_list' %}" class="action-link">
+                <strong>Clients</strong>
+                <span>Accéder aux clients et à leurs commandes.</span>
+            </a>
+            <a href="{% url 'commande_list' %}" class="action-link">
+                <strong>Commandes</strong>
+                <span>Suivre les commandes et leurs lignes.</span>
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}
