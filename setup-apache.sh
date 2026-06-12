@@ -89,27 +89,11 @@ cat > "$APACHE_CONFIG" << 'EOF'
     # Activer le proxy
     <IfModule mod_proxy.c>
         ProxyPreserveHost On
-        
-        # Pas de proxy pour les fichiers statiques
-        ProxyPass /static/ !
-        ProxyPass /media/ !
-        
+
         # Rediriger tout vers Django
         ProxyPass / http://127.0.0.1:8000/
         ProxyPassReverse / http://127.0.0.1:8000/
     </IfModule>
-
-    # Static files
-    <Directory /var/www/SAE203/drive/static>
-        Require all granted
-        Options -Indexes
-    </Directory>
-
-    # Media files
-    <Directory /var/www/SAE203/drive/media>
-        Require all granted
-        Options -Indexes
-    </Directory>
 
     # Root directory
     <Directory /var/www/SAE203>
